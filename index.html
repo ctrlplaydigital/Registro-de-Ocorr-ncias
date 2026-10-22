@@ -3,83 +3,94 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Registro de ocorrências</title>
+<title>Registro de Ocorrências</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #eef1f3; --card: #ffffff; --ink: #1b2a2f; --muted: #5d6f75;
-    --line: #cfd8dc; --accent: #1f5f55; --accent-ink: #ffffff; --err: #b3261e;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #11191c; --card: #19252a; --ink: #e6eef0; --muted: #94a8ae;
-            --line: #2f4147; --accent: #4fb3a2; --accent-ink: #08201c; --err: #ff8a80; }
+    color-scheme: dark;
+    --bg: #171923; --card: #1e2231; --field: #313548; --line: #2b3042;
+    --blue: #4dabf7; --ink: #ffffff; --muted: #8b93ab; --req: #ff6b81; --err: #ff8a80;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 16px/1.5 "Schibsted Grotesk", system-ui, sans-serif; }
-  main { max-width: 640px; margin: 0 auto; padding: 32px 16px 64px; }
-  h1 { font-size: 1.75rem; margin: 0 0 4px; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); margin: 0 0 24px; }
-  form { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-         padding: 24px; display: grid; gap: 20px; }
-  label, legend { font-weight: 500; font-size: .95rem; display: block; margin-bottom: 6px; }
+         font: 16px/1.5 "Inter", system-ui, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 12px 12px 64px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 40px 36px 36px; }
+  h1 { margin: 0; text-align: center; color: var(--blue); font-size: 1.9rem; font-weight: 700; letter-spacing: -0.01em; }
+  .rule { border: 0; border-top: 1px solid var(--blue); margin: 22px 0 14px; }
+  .sub { text-align: center; color: var(--muted); font-size: .875rem; margin: 0 0 26px; }
+  form { display: grid; gap: 20px; }
+  label { display: block; margin-bottom: 7px; color: var(--blue); font-size: .75rem; font-weight: 600; }
+  label .req { color: var(--req); }
   select, input[type=date], textarea {
-    width: 100%; font: inherit; color: var(--ink); background: var(--bg);
-    border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
-  textarea { min-height: 120px; resize: vertical; }
-  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  fieldset { border: 0; padding: 0; margin: 0; }
-  .grav { display: flex; flex-wrap: wrap; gap: 8px; }
-  .grav label { margin: 0; font-weight: 400; }
-  .grav input { position: absolute; opacity: 0; }
-  .grav span { display: inline-block; padding: 8px 14px; border: 1px solid var(--line);
-               border-radius: 999px; cursor: pointer; background: var(--bg); }
-  .grav input:checked + span { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 500; }
-  .grav input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
-  button { font: inherit; font-weight: 700; background: var(--accent); color: var(--accent-ink);
-           border: 0; border-radius: 6px; padding: 12px 20px; cursor: pointer; }
-  button:disabled { opacity: .6; cursor: wait; }
-  #msg { min-height: 1.5em; margin: 0; font-weight: 500; }
+    width: 100%; font: inherit; font-size: 1rem; font-weight: 500; color: var(--ink);
+    background: var(--field); border: 1px solid transparent; border-radius: 6px; padding: 0 16px; height: 44px; }
+  select { cursor: pointer; padding-right: 12px; }
+  input[type=date] { cursor: pointer; }
+  /* o ícone de calendário continua funcionando, mas o campo todo é clicável */
+  input[type=date]::-webkit-calendar-picker-indicator { cursor: pointer; }
+  textarea { height: auto; min-height: 130px; padding: 12px 16px; resize: vertical; font-weight: 400; }
+  textarea::placeholder { color: var(--muted); }
+  select:focus-visible, input:focus-visible, textarea:focus-visible, button:focus-visible {
+    outline: 2px solid var(--blue); outline-offset: 2px; }
+  button { margin-top: 4px; height: 46px; font: inherit; font-weight: 600; color: #08141f;
+           background: var(--blue); border: 0; border-radius: 6px; cursor: pointer; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  .ver { display: flex; align-items: center; justify-content: center; height: 46px; margin-top: 12px;
+         color: var(--blue); background: transparent; border: 1px solid var(--blue); border-radius: 6px;
+         font-weight: 600; text-decoration: none; }
+  .ver[hidden] { display: none; }
+  .ver:hover { background: rgba(77,171,247,.12); }
+  .ver:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  #msg { min-height: 1.4em; margin: 0; font-size: .9rem; font-weight: 500; text-align: center; }
   #msg.erro { color: var(--err); }
-  #msg.ok { color: var(--accent); }
+  #msg.ok { color: #69db9c; }
+  @media (max-width: 520px) { .card { padding: 28px 18px 24px; } h1 { font-size: 1.5rem; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>Registro de ocorrências</h1>
-  <p class="sub">Preencha os dados e salve. O registro vai direto para a planilha.</p>
+  <div class="card">
+    <h1>Registro de Ocorrências</h1>
+    <hr class="rule">
+    <p class="sub">Registre a ocorrência do professor. A data vem com o dia de hoje, mas você pode alterá-la.</p>
 
-  <form id="f" novalidate>
-    <div>
-      <label for="professor">Professor</label>
-      <select id="professor" required><option value="">Carregando…</option></select>
-    </div>
-    <div>
-      <label for="data">Data da ocorrência</label>
-      <input type="date" id="data" required>
-    </div>
-    <div>
-      <label for="motivo">Motivo</label>
-      <select id="motivo" required><option value="">Carregando…</option></select>
-    </div>
-    <div>
-      <label for="descricao">Descrição</label>
-      <textarea id="descricao" required placeholder="Descreva o que aconteceu"></textarea>
-    </div>
-    <fieldset>
-      <legend>Gravidade</legend>
-      <div class="grav" id="gravidade"></div>
-    </fieldset>
-    <p id="msg" role="status"></p>
-    <button type="submit" id="salvar" disabled>Salvar ocorrência</button>
-  </form>
+    <form id="f" novalidate>
+      <div>
+        <label for="professor">Professor <span class="req">*</span></label>
+        <select id="professor" required><option value="">Carregando...</option></select>
+      </div>
+      <div>
+        <label for="data">Data da ocorrência <span class="req">*</span></label>
+        <input type="date" id="data" required>
+      </div>
+      <div>
+        <label for="motivo">Motivo <span class="req">*</span></label>
+        <select id="motivo" required><option value="">Carregando...</option></select>
+      </div>
+      <div>
+        <label for="descricao">Descrição <span class="req">*</span></label>
+        <textarea id="descricao" required placeholder="Descreva o que aconteceu"></textarea>
+      </div>
+      <div>
+        <label for="gravidade">Gravidade <span class="req">*</span></label>
+        <select id="gravidade" required><option value="">Carregando...</option></select>
+      </div>
+      <p id="msg" role="status"></p>
+      <button type="submit" id="salvar" disabled>Salvar ocorrência</button>
+    </form>
+    <a class="ver" id="ver" href="#" target="_blank" rel="noopener">Abrir planilha de ocorrências</a>
+  </div>
 </main>
 
 <script>
 // Cole aqui a URL do app da web gerada no Apps Script (termina em /exec)
 const API_URL = "https://script.google.com/macros/s/AKfycby2qylNAOZi-PVPzg-vSOUfxZboXqcKUJghr6SwvmRELftmz9D0Puohxj6oYN8683O1/exec";
+
+// Cole aqui o link da sua planilha do Google Planilhas (o botão só aparece depois disso)
+const PLANILHA_URL = "https://docs.google.com/spreadsheets/d/1MMkx8_YzSmOOAqn_dFiKMVk9M6tZx-gmImzAuJzR7lo/edit?usp=sharing";
 
 const $ = id => document.getElementById(id);
 const msg = (t, c = "") => { $("msg").textContent = t; $("msg").className = c; };
@@ -90,27 +101,26 @@ function hoje() {
   return d.toISOString().slice(0, 10);
 }
 
-function preencher(select, itens, rotulo) {
+function preencher(select, itens) {
   select.innerHTML = "";
-  select.add(new Option(rotulo, ""));
+  select.add(new Option("Selecione...", ""));
   itens.forEach(i => select.add(new Option(i, i)));
 }
+
+// Clicar em qualquer ponto do campo de data abre o calendário
+$("data").addEventListener("click", e => {
+  try { e.currentTarget.showPicker(); } catch (_) { /* navegador sem suporte: usa o ícone */ }
+});
 
 async function carregar() {
   try {
     const r = await fetch(API_URL);
     const d = await r.json();
     if (!d.ok) throw new Error(d.erro);
-    preencher($("professor"), d.professores, "Selecione o professor");
-    preencher($("motivo"), d.motivos, "Selecione o motivo");
-    $("gravidade").innerHTML = "";
-    d.gravidades.forEach(g => {
-      const l = document.createElement("label");
-      const i = document.createElement("input");
-      i.type = "radio"; i.name = "gravidade"; i.value = g;
-      const s = document.createElement("span"); s.textContent = g;
-      l.append(i, s); $("gravidade").append(l);
-    });
+    const professores = [...d.professores].sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+    preencher($("professor"), professores);
+    preencher($("motivo"), d.motivos);
+    preencher($("gravidade"), d.gravidades);
     $("salvar").disabled = false;
     msg("");
   } catch (e) {
@@ -120,15 +130,14 @@ async function carregar() {
 
 $("f").addEventListener("submit", async ev => {
   ev.preventDefault();
-  const grav = document.querySelector("input[name=gravidade]:checked");
   const dados = {
     professor: $("professor").value, data: $("data").value, motivo: $("motivo").value,
-    descricao: $("descricao").value.trim(), gravidade: grav ? grav.value : ""
+    descricao: $("descricao").value.trim(), gravidade: $("gravidade").value
   };
   if (!dados.professor || !dados.data || !dados.motivo || !dados.descricao || !dados.gravidade) {
-    return msg("Preencha todos os campos, incluindo a gravidade.", "erro");
+    return msg("Preencha todos os campos.", "erro");
   }
-  $("salvar").disabled = true; msg("Salvando…");
+  $("salvar").disabled = true; msg("Salvando...");
   try {
     // text/plain evita a pré-verificação CORS, que o Apps Script não responde
     const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(dados) });
@@ -140,6 +149,15 @@ $("f").addEventListener("submit", async ev => {
     msg("Não foi possível salvar. Tente novamente.", "erro");
   } finally { $("salvar").disabled = false; }
 });
+
+if (PLANILHA_URL.startsWith("http")) {
+  $("ver").href = PLANILHA_URL;
+} else {
+  $("ver").addEventListener("click", e => {
+    e.preventDefault();
+    msg("Falta colar o link da planilha na linha PLANILHA_URL do código.", "erro");
+  });
+}
 
 $("data").value = hoje();
 carregar();
