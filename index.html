@@ -5,72 +5,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Registro de ocorrências · Programação e Robótica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Identidade visual CNA: vermelho de ação, azul-marinho nos títulos, Poppins, cantos arredondados */
   :root {
-    --fundo: #eef1f6; --papel: #ffffff; --tinta: #141b2d; --suave: #5b6478;
-    --linha: #d5dae5; --acento: #2447e0; --acento-escuro: #1a35b3;
-    --leve: #1f7a4d; --leve-bg: #e0f3e8;
-    --media: #8a5a00; --media-bg: #fdefc9;
-    --grave: #a31f2e; --grave-bg: #fbe0e3;
-    --erro: #a31f2e;
+    --fundo: #f7f8fb; --papel: #ffffff; --tinta: #3a3b4d; --suave: #6b6d80;
+    --linha: #dfe2ea; --acento: #e8173f; --acento-escuro: #c40f33;
+    --marinho: #2b2a74; --marinho-fundo: #2d2c70;
+    --leve: #1d7a45; --leve-bg: #d8f6dd;
+    --media: #8a5a00; --media-bg: #fef1c4;
+    --grave: #b3122f; --grave-bg: #ffdfe5;
+    --erro: #d3122f;
+    --sombra: 0 6px 24px rgba(43,42,116,.08);
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   body { margin: 0; background: var(--fundo); color: var(--tinta);
-         font: 16px/1.45 'IBM Plex Sans', system-ui, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 64px; }
-  h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 2px; }
-  .sub { margin: 0 0 20px; color: var(--suave); }
+         font: 400 15px/1.5 'Poppins', system-ui, sans-serif; }
+
+  /* barra superior */
+  .topo { background: #fff; box-shadow: 0 2px 14px rgba(43,42,116,.08); border-top: 4px solid var(--acento); }
+  .topo-in { max-width: 1000px; margin: 0 auto; padding: 14px 16px; display: flex;
+             align-items: center; justify-content: space-between; gap: 16px; }
+  .topo img { display: block; height: 32px; width: auto; }
+  .topo .selo { padding: 8px 16px; border-radius: 999px; background: #d5f7da; color: var(--marinho);
+                font-size: .8125rem; font-weight: 600; white-space: nowrap; }
+
+  main { max-width: 1000px; margin: 0 auto; padding: 32px 16px 72px; }
+
+  /* faixa azul-marinho com o título */
+  .hero { background: var(--marinho-fundo); color: #fff; border-radius: 16px;
+          padding: 28px 32px; margin: 0 0 24px; position: relative; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; right: -40px; top: -60px; width: 260px; height: 260px;
+                 border-radius: 50%; border: 36px solid rgba(255,255,255,.05); pointer-events: none; }
+  h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.2; margin: 0 0 6px; letter-spacing: -.01em; }
+  .sub { margin: 0; color: rgba(255,255,255,.85); font-size: 1rem; }
 
   /* carregamento */
-  .carregando { background: var(--papel); border: 1px solid var(--linha); border-radius: 10px;
-                padding: 28px 24px; display: flex; align-items: center; gap: 16px; }
-  .carregando strong { display: block; font-weight: 600; }
+  .carregando { background: var(--papel); border: 1px solid var(--linha); border-radius: 16px;
+                padding: 28px 24px; display: flex; align-items: center; gap: 16px; box-shadow: var(--sombra); }
+  .carregando strong { display: block; font-weight: 600; color: var(--marinho); }
   .carregando small { color: var(--suave); display: block; min-height: 1.3em; }
   .spinner { flex: none; width: 28px; height: 28px; border-radius: 50%;
-             border: 3px solid var(--linha); border-top-color: var(--acento);
+             border: 3px solid #f6cdd5; border-top-color: var(--acento);
              animation: gira .8s linear infinite; }
   .carregando.erro .spinner { display: none; }
   .carregando.erro strong { color: var(--erro); }
   @keyframes gira { to { transform: rotate(360deg); } }
   .tentar { margin-top: 10px; }
 
-  form { background: var(--papel); border: 1px solid var(--linha); border-radius: 10px;
-         padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
-  .nota { margin: 0; color: var(--suave); font-size: .875rem; }
+  form { background: var(--papel); border: 1px solid var(--linha); border-radius: 16px;
+         padding: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 18px; box-shadow: var(--sombra); }
+  .nota { margin: 0; color: var(--suave); font-size: .8125rem; }
   .campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .cheio { grid-column: 1 / -1; }
-  label, .rotulo { font-size: .875rem; font-weight: 500; }
-  .obr::after { content: ' *'; color: var(--erro); }
-  input, select, textarea { font: inherit; color: inherit; width: 100%; padding: 10px 12px;
-         background: #fff; border: 1px solid var(--linha); border-radius: 6px; }
+  label, .rotulo { font-size: .8125rem; font-weight: 500; color: var(--marinho); }
+  .obr::after { content: ' *'; color: var(--acento); font-weight: 600; }
+  input, select, textarea { font: inherit; color: var(--tinta); width: 100%; padding: 11px 14px;
+         background: #fff; border: 1px solid var(--linha); border-radius: 8px;
+         transition: border-color .15s, box-shadow .15s; }
+  input::placeholder, textarea::placeholder { color: #9a9cad; }
+  select { cursor: pointer; }
   textarea { min-height: 120px; resize: vertical; }
-  .bloqueado, select:disabled { background: #f1f3f8; color: var(--suave); cursor: not-allowed; }
+  .bloqueado, select:disabled { background: #f1f2f7; color: var(--suave); cursor: not-allowed; }
+  input:hover:not(:disabled):not([readonly]), select:hover:not(:disabled), textarea:hover { border-color: #c4c8d6; }
   input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
-    outline: 3px solid rgba(36,71,224,.35); outline-offset: 1px; border-color: var(--acento); }
+    outline: 3px solid rgba(232,23,63,.25); outline-offset: 1px; border-color: var(--acento); }
   .dica { font-size: .8125rem; color: var(--erro); margin: 0; }
-  .classif { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; }
-  .etiqueta { padding: 5px 14px; border-radius: 999px; font-weight: 600; font-size: .9rem;
-              background: #f1f3f8; color: var(--suave); }
+  .classif { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+  .etiqueta { padding: 6px 16px; border-radius: 999px; font-weight: 600; font-size: .875rem;
+              background: #f1f2f7; color: var(--suave); }
   .etiqueta.LEVE  { background: var(--leve-bg);  color: var(--leve); }
   .etiqueta.MEDIA { background: var(--media-bg); color: var(--media); }
   .etiqueta.GRAVE { background: var(--grave-bg); color: var(--grave); }
-  .acoes { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex-direction: row; }
-  button { font: inherit; font-weight: 600; padding: 11px 22px; border: 0; border-radius: 6px;
-           background: var(--acento); color: #fff; cursor: pointer; }
-  button:hover { background: var(--acento-escuro); }
+  .acoes { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex-direction: row;
+           padding-top: 6px; }
+
+  /* botão principal: vermelho CNA */
+  button { font: inherit; font-weight: 600; padding: 12px 28px; border: 1px solid var(--acento); border-radius: 8px;
+           background: var(--acento); color: #fff; cursor: pointer; transition: background .15s, border-color .15s; }
+  button:hover { background: var(--acento-escuro); border-color: var(--acento-escuro); }
   button:disabled { opacity: .6; cursor: wait; }
+  /* botão secundário (Tentar de novo): contorno azul-marinho */
+  .tentar { background: #fff; color: var(--marinho); border-color: var(--marinho); padding: 9px 20px; }
+  .tentar:hover { background: #eeeefa; border-color: var(--marinho); }
   #msg { font-weight: 500; }
   #msg.ok { color: var(--leve); } #msg.erro { color: var(--erro); }
-  @media (max-width: 600px) { form { grid-template-columns: 1fr; padding: 18px; } }
-  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+  @media (max-width: 600px) {
+    form { grid-template-columns: 1fr; padding: 20px; }
+    .hero { padding: 22px 20px; }
+    h1 { font-size: 1.4rem; }
+    .topo .selo { font-size: .75rem; padding: 6px 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } * { transition: none !important; } }
 </style>
 </head>
 <body>
+<header class="topo">
+  <div class="topo-in">
+    <img src="https://media.cna.com.br/cna_logo_3ff9a4f2fc.svg" alt="CNA" onerror="this.style.display='none'">
+  </div>
+</header>
 <main>
-  <h1>Registro de ocorrências</h1>
-  <p class="sub">Programação e Robótica</p>
+  <div class="hero">
+    <h1>Registro de ocorrências</h1>
+    <p class="sub">Programação e Robótica</p>
+  </div>
 
   <div id="carregando" class="carregando" role="status" aria-live="polite">
     <span class="spinner" aria-hidden="true"></span>
