@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de ocorrências · Programação e Robótica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -16,31 +16,47 @@
     --erro: #a31f2e;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body { margin: 0; background: var(--fundo); color: var(--tinta);
          font: 16px/1.45 'IBM Plex Sans', system-ui, sans-serif; }
   main { max-width: 760px; margin: 0 auto; padding: 28px 16px 64px; }
-  h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 4px; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 2px; }
   .sub { margin: 0 0 20px; color: var(--suave); }
+
+  /* carregamento */
+  .carregando { background: var(--papel); border: 1px solid var(--linha); border-radius: 10px;
+                padding: 28px 24px; display: flex; align-items: center; gap: 16px; }
+  .carregando strong { display: block; font-weight: 600; }
+  .carregando small { color: var(--suave); display: block; min-height: 1.3em; }
+  .spinner { flex: none; width: 28px; height: 28px; border-radius: 50%;
+             border: 3px solid var(--linha); border-top-color: var(--acento);
+             animation: gira .8s linear infinite; }
+  .carregando.erro .spinner { display: none; }
+  .carregando.erro strong { color: var(--erro); }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .tentar { margin-top: 10px; }
+
   form { background: var(--papel); border: 1px solid var(--linha); border-radius: 10px;
          padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
+  .nota { margin: 0; color: var(--suave); font-size: .875rem; }
   .campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .cheio { grid-column: 1 / -1; }
-  label { font-size: .875rem; font-weight: 500; }
+  label, .rotulo { font-size: .875rem; font-weight: 500; }
   .obr::after { content: ' *'; color: var(--erro); }
   input, select, textarea { font: inherit; color: inherit; width: 100%; padding: 10px 12px;
          background: #fff; border: 1px solid var(--linha); border-radius: 6px; }
   textarea { min-height: 120px; resize: vertical; }
-  input[readonly] { background: #f4f6fa; color: var(--suave); }
-  select:disabled { background: #f4f6fa; color: #9aa3b5; }
+  .bloqueado, select:disabled { background: #f1f3f8; color: var(--suave); cursor: not-allowed; }
   input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
     outline: 3px solid rgba(36,71,224,.35); outline-offset: 1px; border-color: var(--acento); }
+  .dica { font-size: .8125rem; color: var(--erro); margin: 0; }
   .classif { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; }
   .etiqueta { padding: 5px 14px; border-radius: 999px; font-weight: 600; font-size: .9rem;
-              background: #f4f6fa; color: var(--suave); }
+              background: #f1f3f8; color: var(--suave); }
   .etiqueta.LEVE  { background: var(--leve-bg);  color: var(--leve); }
   .etiqueta.MEDIA { background: var(--media-bg); color: var(--media); }
   .etiqueta.GRAVE { background: var(--grave-bg); color: var(--grave); }
-  .acoes { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .acoes { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex-direction: row; }
   button { font: inherit; font-weight: 600; padding: 11px 22px; border: 0; border-radius: 6px;
            background: var(--acento); color: #fff; cursor: pointer; }
   button:hover { background: var(--acento-escuro); }
@@ -48,30 +64,70 @@
   #msg { font-weight: 500; }
   #msg.ok { color: var(--leve); } #msg.erro { color: var(--erro); }
   @media (max-width: 600px) { form { grid-template-columns: 1fr; padding: 18px; } }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
 </style>
 </head>
 <body>
 <main>
-  <h1 id="titulo">Registro de ocorrência</h1>
-  <p class="sub">Campos com * são obrigatórios.</p>
-  <form id="form" novalidate></form>
+  <h1>Registro de ocorrências</h1>
+  <p class="sub">Programação e Robótica</p>
+
+  <div id="carregando" class="carregando" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <div>
+      <strong id="cab">Carregando o formulário…</strong>
+      <small id="demora"></small>
+      <button type="button" id="tentar" class="tentar" hidden>Tentar de novo</button>
+    </div>
+  </div>
+
+  <form id="form" novalidate hidden></form>
 </main>
 
 <script>
   // Cole aqui a URL do app da Web gerada pelo Apps Script (termina em /exec)
-  var API_URL = 'https://script.google.com/macros/s/AKfycbyR41vkxVCWdGhgrqyqp20Db5PJSADPR3BwZ7x8KOFiIEekN-vhO4pLkM-k3Bm0B53D/exec';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbyatOQjob68ywPjgi4MYdJ7ClPa918ELk_TEtKhxTFtjfpy80okhpmJPLeWsSlHjikN/exec';
 
-  var CFG = null, TABELA = [], ELEM = {};
+  var CFG = null, TABELA = [], ELEM = {}, WRAP = {};
 
-  fetch(API_URL)
-    .then(function (r) { return r.json(); })
-    .then(function (cfg) {
-      if (cfg.ok === false) throw new Error(cfg.erro);
-      iniciar(cfg);
-    })
-    .catch(function (e) { mostrarMsg('Não foi possível carregar o formulário. ' + (e.message || ''), 'erro'); });
+  /* ---------- carregamento ---------- */
+  function carregar() {
+    var box = document.getElementById('carregando');
+    var cab = document.getElementById('cab');
+    var demora = document.getElementById('demora');
+    var tentar = document.getElementById('tentar');
+    box.className = 'carregando'; box.hidden = false;
+    cab.textContent = 'Carregando o formulário…'; demora.textContent = ''; tentar.hidden = true;
 
+    function falhar(msg) {
+      box.className = 'carregando erro';
+      cab.textContent = 'Não foi possível carregar o formulário';
+      demora.textContent = msg || '';
+      tentar.hidden = false;
+    }
+
+    if (API_URL.indexOf('COLE_AQUI') === 0) { falhar('A URL do Apps Script ainda não foi configurada (API_URL).'); return; }
+
+    var ctrl = new AbortController();
+    var aviso = setTimeout(function () { demora.textContent = 'Está demorando um pouco mais que o normal. Aguarde um instante.'; }, 5000);
+    var limite = setTimeout(function () { ctrl.abort(); }, 40000);
+
+    fetch(API_URL, { signal: ctrl.signal })
+      .then(function (r) { return r.json(); })
+      .then(function (cfg) {
+        if (cfg.ok === false) throw new Error(cfg.erro);
+        iniciar(cfg);
+        box.hidden = true;
+      })
+      .catch(function (e) {
+        falhar(e.name === 'AbortError' ? 'O servidor não respondeu a tempo.' : (e.message || ''));
+      })
+      .then(function () { clearTimeout(aviso); clearTimeout(limite); });
+  }
+  document.getElementById('tentar').addEventListener('click', carregar);
+  carregar();
+
+  /* ---------- utilidades ---------- */
   function el(tag, attrs, filhos) {
     var n = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
@@ -80,15 +136,19 @@
     (filhos || []).forEach(function (f) { n.appendChild(f); });
     return n;
   }
+  function campoPorChave(chave) {
+    return CFG.campos.filter(function (c) { return c.chave === chave; })[0];
+  }
 
+  /* ---------- montagem do formulário ---------- */
   function iniciar(cfg) {
-    CFG = cfg; TABELA = cfg.classificacao;
-    document.getElementById('titulo').textContent = cfg.titulo;
+    CFG = cfg; TABELA = cfg.classificacao; ELEM = {}; WRAP = {};
     var form = document.getElementById('form');
-    var campos = cfg.campos;
-    var campoClassif = campos.filter(function (c) { return c.tipo === 'classificacao'; })[0];
+    form.textContent = ''; form.hidden = false;
+    form.appendChild(el('p', { 'class': 'nota cheio', texto: 'Campos com * são obrigatórios.' }));
 
-    campos.forEach(function (c) {
+    var campoClassif = cfg.campos.filter(function (c) { return c.tipo === 'classificacao'; })[0];
+    cfg.campos.forEach(function (c) {
       if (c.tipo === 'classificacao') return;       // renderizada junto do motivo
       form.appendChild(criarCampo(c));
       if (c.chave === 'motivo' && campoClassif) form.appendChild(criarClassificacao(campoClassif));
@@ -97,38 +157,60 @@
     var botao = el('button', { type: 'submit', id: 'enviar', texto: 'Registrar ocorrência' });
     var msg = el('span', { id: 'msg', role: 'status', 'aria-live': 'polite' });
     form.appendChild(el('div', { 'class': 'campo cheio acoes' }, [botao, msg]));
-    form.addEventListener('submit', enviar);
+    form.onsubmit = enviar;
 
-    if (ELEM.data && ELEM.dia_semana) {
-      ELEM.data.addEventListener('change', atualizarDia);
-    }
-    atualizarCascata();
+    // campos de origem (ex.: turma) ganham uma dica de formato
+    cfg.campos.forEach(function (c) {
+      if (c.preencherDe && WRAP[c.preencherDe] && !WRAP[c.preencherDe].querySelector('.dica')) {
+        WRAP[c.preencherDe].appendChild(el('p', { 'class': 'dica', hidden: '',
+          texto: 'Não consegui ler tudo. Formato esperado: #0000 - CY00 / MAI / SEG / 20:10 / Nome do professor' }));
+        ELEM[c.preencherDe].addEventListener('input', atualizarDerivados);
+      }
+    });
+    if (ELEM.data && ELEM.dia_semana) ELEM.data.addEventListener('change', atualizarDia);
+
+    atualizarCascata(); atualizarDerivados(); atualizarDia();
   }
 
   function criarCampo(c) {
     var id = 'f_' + c.chave, controle;
-    var cheio = c.tipo === 'textarea' || c.tipo === 'cascata';
+    var cascata = c.tipo === 'cascata';
+    var derivado = !!c.preencherDe;
+    var bloq = !cascata && (!!c.bloqueado || derivado || c.tipo === 'dia_semana');
+    var cheio = c.cheio || c.tipo === 'textarea' || cascata;
+
     if (c.tipo === 'textarea') controle = el('textarea', { id: id });
-    else if (c.tipo === 'cascata' || c.tipo === 'selecao') {
+    else if (cascata || c.tipo === 'selecao') {
       controle = el('select', { id: id });
       if (c.tipo === 'selecao') preencher(controle, c.opcoes || [], 'Selecione…');
       else controle.addEventListener('change', atualizarCascata);
     } else {
-      var tipos = { texto: 'text', data: 'date', hora: 'time', email: 'email', dia_semana: 'text' };
-      controle = el('input', { id: id, type: tipos[c.tipo] || 'text', autocomplete: 'off' });
-      if (c.tipo === 'dia_semana') { controle.readOnly = true; controle.placeholder = 'Preenchido pela data'; }
+      var tipos = { texto: 'text', data: 'date', hora: 'time', email: 'email' };
+      var tipoInput = (derivado || c.tipo === 'dia_semana') ? 'text' : (tipos[c.tipo] || 'text');
+      controle = el('input', { id: id, type: tipoInput, autocomplete: 'off' });
+      if (derivado || c.tipo === 'dia_semana') controle.placeholder = 'Preenchido automaticamente';
     }
+
+    if (c.padrao !== undefined) controle.value = c.padrao;
+    if (bloq) {
+      if (controle.tagName === 'SELECT') controle.disabled = true; else controle.readOnly = true;
+      controle.classList.add('bloqueado');
+      controle.setAttribute('aria-readonly', 'true');
+    }
+
     ELEM[c.chave] = controle;
     var rotulo = el('label', { 'for': id, texto: c.rotulo });
     if (c.obrigatorio) rotulo.className = 'obr';
-    return el('div', { 'class': 'campo' + (cheio ? ' cheio' : '') }, [rotulo, controle]);
+    var wrap = el('div', { 'class': 'campo' + (cheio ? ' cheio' : '') }, [rotulo, controle]);
+    WRAP[c.chave] = wrap;
+    return wrap;
   }
 
   function criarClassificacao(c) {
     var tag = el('span', { 'class': 'etiqueta', texto: 'Definida pelo motivo' });
     ELEM.classificacao = tag;
     return el('div', { 'class': 'campo' }, [
-      el('span', { 'class': 'rotulo-fake', texto: c.rotulo, style: 'font-size:.875rem;font-weight:500' }),
+      el('span', { 'class': 'rotulo', texto: c.rotulo }),
       el('div', { 'class': 'classif' }, [tag])
     ]);
   }
@@ -138,27 +220,29 @@
     select.appendChild(el('option', { value: '', texto: placeholder }));
     valores.forEach(function (v) { select.appendChild(el('option', { value: v, texto: v })); });
   }
-
   function unicos(lista) {
     var vistos = {}; return lista.filter(function (v) { return vistos[v] ? false : (vistos[v] = true); });
   }
 
+  /* ---------- tipo → assunto → motivo → classificação ---------- */
   function atualizarCascata() {
     var tipo = ELEM.tipo, assunto = ELEM.assunto, motivo = ELEM.motivo;
     if (!tipo || !assunto || !motivo) return;
 
-    if (!tipo.options.length) {
+    if (tipo.options.length <= 1) {
+      var v = tipo.value;
       preencher(tipo, unicos(TABELA.map(function (r) { return r.tipo; })), 'Selecione o tipo…');
+      tipo.value = v;
     }
     var t = tipo.value, a = assunto.value;
 
     var assuntos = unicos(TABELA.filter(function (r) { return r.tipo === t; }).map(function (r) { return r.assunto; }));
-    if (!assuntos.includes(a)) a = '';
+    if (assuntos.indexOf(a) < 0) a = '';
     preencher(assunto, assuntos, t ? 'Selecione o assunto…' : 'Escolha o tipo antes');
     assunto.value = a; assunto.disabled = !t;
 
     var motivos = unicos(TABELA.filter(function (r) { return r.tipo === t && r.assunto === a; }).map(function (r) { return r.motivo; }));
-    var m = motivo.value; if (!motivos.includes(m)) m = '';
+    var m = motivo.value; if (motivos.indexOf(m) < 0) m = '';
     preencher(motivo, motivos, a ? 'Selecione o motivo…' : 'Escolha o assunto antes');
     motivo.value = m; motivo.disabled = !a;
     motivo.onchange = atualizarClassificacao;
@@ -179,30 +263,73 @@
     ELEM.classificacao.className = 'etiqueta' + (c ? ' ' + c.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase() : '');
   }
 
+  /* ---------- data → dia da semana ---------- */
   var DIAS = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
   function atualizarDia() {
+    if (!ELEM.data || !ELEM.dia_semana) return;
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ELEM.data.value);
     ELEM.dia_semana.value = m ? DIAS[new Date(+m[1], +m[2] - 1, +m[3]).getDay()] : '';
   }
 
+  /* ---------- turma → horário, módulo, professor ---------- */
+  // Formato: "#9640 - CY03 / MAI / SEG / 20:10 / Caio Ramos"
+  // (mesma lógica de analisarTurma_ no Code.gs; o servidor confere de novo ao salvar)
+  function analisarTurma(texto) {
+    var r = { horario: '', modulo: '', professor: '' };
+    var partes = String(texto || '').split('/').map(function (s) { return s.trim(); });
+    if (partes.length < 3) return r;
+    r.professor = partes[partes.length - 1];
+    var h = partes[partes.length - 2];
+    if (/^\d{1,2}:\d{2}$/.test(h)) r.horario = h.length === 4 ? '0' + h : h;
+    var m = /-\s*([A-Za-z]{2})/.exec(partes[0]);
+    if (m) r.modulo = (CFG.modulos || {})[m[1].toUpperCase()] || '';
+    return r;
+  }
+
+  function atualizarDerivados() {
+    var incompleto = {};
+    CFG.campos.forEach(function (c) {
+      if (!c.preencherDe || !ELEM[c.chave] || !ELEM[c.preencherDe]) return;
+      var origem = ELEM[c.preencherDe].value;
+      var valor = analisarTurma(origem)[c.extrair] || '';
+      ELEM[c.chave].value = valor;
+      if (origem.trim() && !valor) incompleto[c.preencherDe] = true;
+    });
+    Object.keys(WRAP).forEach(function (chave) {
+      var dica = WRAP[chave].querySelector('.dica');
+      if (dica) dica.hidden = !incompleto[chave];
+    });
+  }
+
+  /* ---------- envio ---------- */
   function mostrarMsg(texto, tipo) {
-    var m = document.getElementById('msg') || document.querySelector('.sub');
+    var m = document.getElementById('msg');
+    if (!m) return;
     m.textContent = texto; m.className = tipo || '';
   }
 
   function enviar(ev) {
     ev.preventDefault();
-    var dados = {}, falta = null;
+    var dados = {}, falta = null, foco = null, aviso = '';
     CFG.campos.forEach(function (c) {
       var e = ELEM[c.chave];
       if (!e || c.tipo === 'classificacao') return;
       dados[c.chave] = e.value;
-      if (c.obrigatorio && !String(e.value).trim() && !falta) falta = c;
+      if (c.obrigatorio && !String(e.value).trim() && !falta) {
+        falta = c;
+        if (c.preencherDe && ELEM[c.preencherDe]) {
+          foco = ELEM[c.preencherDe];
+          aviso = 'Não consegui ler "' + c.rotulo + '" a partir de "' + campoPorChave(c.preencherDe).rotulo + '". Confira o formato da turma.';
+        } else {
+          foco = e; aviso = 'Preencha o campo "' + c.rotulo + '".';
+        }
+      }
     });
-    if (falta) { mostrarMsg('Preencha o campo "' + falta.rotulo + '".', 'erro'); ELEM[falta.chave].focus(); return; }
+    if (falta) { mostrarMsg(aviso, 'erro'); foco.focus(); return; }
 
     var botao = document.getElementById('enviar');
     botao.disabled = true; mostrarMsg('Salvando…', '');
+
     // text/plain evita a pré-verificação (CORS) que o Apps Script não responde
     fetch(API_URL, {
       method: 'POST',
@@ -214,9 +341,12 @@
         if (!res.ok) throw new Error(res.erro || 'Não foi possível salvar.');
         CFG.campos.forEach(function (c) {
           var e = ELEM[c.chave];
-          if (e && c.tipo !== 'classificacao' && !c.manter) e.value = '';
+          if (!e || c.tipo === 'classificacao') return;
+          if (c.padrao !== undefined) e.value = c.padrao;
+          else if (!c.manter) e.value = '';
         });
-        atualizarCascata(); botao.disabled = false;
+        atualizarCascata(); atualizarDerivados(); atualizarDia();
+        botao.disabled = false;
         mostrarMsg('Ocorrência registrada.', 'ok');
       })
       .catch(function (e) {
